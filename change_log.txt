@@ -1,0 +1,10 @@
+3/26/21
+	Additions/Fixes:
+	- Game Environment created
+	- Player movement implemented
+	- Screen wrapping implemented
+	
+	Bugs:
+	- Player can't move diagonally
+	- If Player hasn't fully decelerate when they switch from horiz. movement to vert. movement (and vice-versa), the player will resume with the previous acceleration they had upon switching back
+	- Not a bug, but the player will eventually need to be it's own class
