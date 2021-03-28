@@ -1,3 +1,15 @@
+3/27/21
+	Additions/Fixes:
+	-Display Setup and Player made as their own classes
+	-Local Multiplayer implemented
+	-Any (known) bugs relating to movement have been fixed
+
+	Bugs/Needed Additions:
+	-User Interface
+	-Wall collisions
+	-Player Projectiles
+	-Player Death
+
 3/26/21
 	Additions/Fixes:
 	- Game Environment created
