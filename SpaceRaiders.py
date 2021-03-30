@@ -2,6 +2,8 @@
 #Final Project CSC308
 #Space Raiders
 
+LIGHTPURPLE = (153, 0, 153) #colors for wall
+WALL_AMOUNT = 3 #how many walls
 
 import pygame
 
@@ -14,6 +16,11 @@ def main():
     Player_2 = Player() #Inits player 2
     Player_1.init_player(1) #Inits player 1 specific data
     Player_2.init_player(2) #Inits player 2 specific data
+
+    WallList = [0] * WALL_AMOUNT #creates list for all walls based on wall amount constant
+    WallList[1] = Wall(200, 200, 20, 20, LIGHTPURPLE, screen)
+    WallList[2] = Wall(200, 400, 20, 20, LIGHTPURPLE, screen)
+    WallList[0] = Wall(300, 400, 20, 20, LIGHTPURPLE, screen)
 
     clock = pygame.time.Clock() #Used for managing how fast the screen updates
     done = False #Flag for closing the game (if user presses X)
@@ -39,8 +46,12 @@ def main():
     #Screen-clearing + Drawing
         P1_list = Player_1.get_player() #Retrieves player sprite and rectangle positions and puts them in a list
         P2_list = Player_2.get_player()
-        screen.update(P1_list, P2_list) #Updates each players position on the screen
-    
+        for i in WallList: #checks to see if player collides with any existing walls
+            if Player_1.checkCollision(pygame.Rect(P1_list[1], P1_list[2], 64, 64), i):
+                Player_1.init_player(1) #resets player data and position, temporary
+            if Player_2.checkCollision(pygame.Rect(P2_list[1], P2_list[2], 64, 64), i):
+                Player_2.init_player(2) #resets player data and position, temporary
+        screen.update(P1_list, P2_list, WallList) #Updates each players position on the screen
         clock.tick(60) #Limits game to 60 FPS
  
 
@@ -54,14 +65,33 @@ class Screen:
         pygame.display.set_caption("Space Raiders") #Window title
         self.BG = pygame.image.load('BG.png').convert() #Load Background image
 
-    def update(self, P1_list, P2_list):
+    def update(self, P1_list, P2_list, WallList):
         self.screen.blit(self.BG, (0,0)) #Sets the BG image on the screen
-        self.screen.blit(P1_list[0], (P1_list[1],P1_list[2])) #Sets the Player sprite to the current location of the rectangle on the screen
-        self.screen.blit(P2_list[0], (P2_list[1],P2_list[2])) #Sets the Player sprite to the current location of the rectangle on the screen
+        self.screen.blit(P1_list[0], (P1_list[1], P1_list[2])) #Sets the Player sprite to the current location of the rectangle on the screen
+        self.screen.blit(P2_list[0], (P2_list[1], P2_list[2])) #Sets the Player sprite to the current location of the rectangle on the screen
+        for i in WallList: #draws all rectangles in list
+            pygame.draw.rect(self.screen, i.color, [i.x, i.y, i.width, i.height], 0)
         pygame.display.flip() #Updates the screen
+        
 
     def get_size(self):
         return self.size #Returns screen size
+
+class Wall:
+    def __init__(self, x, y, width, height, color, screen): #Constructor
+        #Initializes rectangle
+        pygame.sprite.Sprite.__init__(self)
+        self.x = x
+        self.y = y
+        self.height = height
+        self.width = width
+        self.color = color
+        self.screen = screen
+        #Creates rectangle
+        self.image = pygame.Surface([width, height])
+        self.image.fill(color)
+        self.rect = self.image.get_rect()
+
 
 class Player:
     def __init__(self): #Constructor
@@ -86,8 +116,11 @@ class Player:
             self.P_Sprite = pygame.transform.flip(self.P_Sprite, True, False)
             self.flip = True #Flip flag for the player's sprite
             
-        self.RECT = pygame.Rect(P_pos[0], P_pos[1], 64, 64)#Player Hitbox (X, Y, Width, Height)
+        self.RECT = pygame.Rect(P_pos[0], P_pos[1], 64, 64) #Player Hitbox (X, Y, Width, Height)
 
+    def checkCollision(self, player, wall): #Checks collision between player and wall
+        if pygame.Rect.colliderect(player, pygame.Rect(wall.x, wall.y, wall.height, wall.width)):
+            return 1
 
 #--------Movement--------
     def movement(self):
