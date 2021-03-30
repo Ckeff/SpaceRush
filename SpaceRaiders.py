@@ -46,11 +46,8 @@ def main():
     #Screen-clearing + Drawing
         P1_list = Player_1.get_player() #Retrieves player sprite and rectangle positions and puts them in a list
         P2_list = Player_2.get_player()
-        for i in WallList: #checks to see if player collides with any existing walls
-            if Player_1.checkCollision(pygame.Rect(P1_list[1], P1_list[2], 64, 64), i):
-                Player_1.init_player(1) #resets player data and position, temporary
-            if Player_2.checkCollision(pygame.Rect(P2_list[1], P2_list[2], 64, 64), i):
-                Player_2.init_player(2) #resets player data and position, temporary
+        Player_1.checkCollision(pygame.Rect(P1_list[1], P1_list[2], 64, 64), WallList, 1)
+        Player_2.checkCollision(pygame.Rect(P2_list[1], P2_list[2], 64, 64), WallList, 2)
         screen.update(P1_list, P2_list, WallList) #Updates each players position on the screen
         clock.tick(60) #Limits game to 60 FPS
  
@@ -118,9 +115,10 @@ class Player:
             
         self.RECT = pygame.Rect(P_pos[0], P_pos[1], 64, 64) #Player Hitbox (X, Y, Width, Height)
 
-    def checkCollision(self, player, wall): #Checks collision between player and wall
-        if pygame.Rect.colliderect(player, pygame.Rect(wall.x, wall.y, wall.height, wall.width)):
-            return 1
+    def checkCollision(self, player, WallList, playernumber): #Checks collision between player and wall
+        for i in WallList: #checks to see if player collides with any existing walls
+            if pygame.Rect.colliderect(player, pygame.Rect(i.x, i.y, i.height, i.width)):
+                self.init_player(playernumber)
 
 #--------Movement--------
     def movement(self):
