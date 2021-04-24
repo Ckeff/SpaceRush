@@ -1,9 +1,10 @@
 import pygame
 import random
 import os
+import mod.SprMOD
 #LvObjMOD.py
 #Contains all the classes relating to hazards and walls in in levels
-#(Will probably be mostly used in LvlMOD.py)
+#(Will probably be mostly used in LvMOD.py)
 
 class Wall:
     def __init__(self, x, y, width, height, color, screen): #Constructor
@@ -77,8 +78,8 @@ class Asteroid:
         if self.Ast_RECT.y < self.scw_dist:
             self.Ast_RECT.y = self.screen_size[1]
             
-class sm_Asteroid(Asteroid):
-    def __init__(self, screen_size, ast_x, ast_y):
+class sm_Asteroid(Asteroid): #Inherits classes from Asteroid, constructor takes the screen size and the 
+    def __init__(self, screen_size, ast_x, ast_y): #current position of the destroyed asteroid to spawn new small asteroids
         self.screen_size = screen_size
         self.Ast_RECT = pygame.Rect(ast_x, ast_y, 128, 128)
         self.scw_dist = -128
@@ -93,3 +94,19 @@ class sm_Asteroid(Asteroid):
             
         self.astr_sprite = pygame.image.load(os.path.join('spr','sm_ast.png')).convert_alpha()
         
+
+class Beam: #Calls sprite attribute functions to rotate the beam around
+
+    def __init__(self, screen_size):
+        self.Beam_spr = mod.SprMOD.spr_BEAM(screen_size)
+        self.beam_info = [0]*5
+        
+    def rotate(self):
+        self.beam_info = self.Beam_spr.rotate()
+        return self.beam_info
+        
+    def get_info(self):
+        return self.beam_info
+
+    def get_mask(self):
+        return self.Beam_spr
