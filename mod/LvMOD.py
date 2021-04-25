@@ -7,6 +7,7 @@ import mod.SprMOD #Imports the module containing sprites and their attributes
 
 class Level:
     def __init__(self, lvlnum): #Takes the level selection as input and selects the desired level layout
+        self.lvlnum = lvlnum
         if lvlnum == 1:
             self.Lvl_1()
         elif lvlnum == 2:
@@ -19,7 +20,7 @@ class Level:
         WALL_AMOUNT = 3 #how many walls
         pygame.init()
         
-        screen = mod.ScrMOD.Screen() #Inits the display screen
+        screen = mod.ScrMOD.Screen(self.lvlnum) #Inits the display screen
         
         Player_1 = mod.PlrMOD.Player() #Inits player 1
         Player_2 = mod.PlrMOD.Player() #Inits player 2
@@ -171,7 +172,6 @@ class Level:
                 j += 1
 
 
-
             i = 0
             while i < 3: 
                 if smast_empty >= 2 and ast_list[i] == 0: #Checks to see if there are two missing small asteroids and 1 big asteroid 
@@ -207,27 +207,33 @@ class Level:
                     smast_list[j+1] = smast[j+1].get_ast()
                 j += 2
            
-            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, COLOR) #Updates each object's position on the screen
+            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info) #Updates each object's position on the screen
             clock.tick(60) #Limits game to 60 FPS
         pygame.quit() #Closes the window and quits the game
 
     def Lvl_2(self): #Teleporter level
         
-        COLOR = (0, 0, 0) #color for debug wall
-        WALL_AMOUNT = 3 #how many walls
+        #GREEN = (113,243,65) #color for debug wall
+        #WALL_AMOUNT = 6 #how many walls
         pygame.init()
         
-        screen = mod.ScrMOD.Screen() #Inits the display screen
+        screen = mod.ScrMOD.Screen(self.lvlnum) #Inits the display screen
         
         Player_1 = mod.PlrMOD.Player() #Inits player 1
         Player_2 = mod.PlrMOD.Player() #Inits player 2
         Player_1.init_player(1) #Inits player 1 specific data
         Player_2.init_player(2) #Inits player 2 specific data
 
-        WallList = [0] * WALL_AMOUNT #creates list for all walls based on wall amount constant
-       # WallList[1] = mod.LvObjMOD.Wall(200, 200, 20, 20, LIGHTPURPLE, screen)
-       # WallList[2] = mod.LvObjMOD.Wall(200, 400, 20, 20, LIGHTPURPLE, screen)
-       #WallList[0] = mod.LvObjMOD.Wall(300, 400, 20, 20, LIGHTPURPLE, screen)
+        WallList = [0] * 6 #creates list for all walls based on wall amount constant
+        #left and right
+        WallList[0] = mod.LvObjMOD.Wall(0, 0, 50, 650, True, screen)
+        WallList[1] = mod.LvObjMOD.Wall(1110, 0, 50, 650, True, screen)
+        #top and bottom
+        WallList[2] = mod.LvObjMOD.Wall(0, 0, 1200, 50, False, screen)
+        WallList[3] = mod.LvObjMOD.Wall(0, 600, 1200, 50, False, screen)
+        #middle walls
+        WallList[4] = mod.LvObjMOD.Wall(550, 0, 50, 650, True, screen)
+        WallList[5] = mod.LvObjMOD.Wall(0, 300, 1200, 50, False, screen)
 
         clock = pygame.time.Clock() #Used for managing how fast the screen updates
         done = False #Flag for closing the game (if user presses X)
@@ -238,7 +244,6 @@ class Level:
         ast_list = [0]*3
         smast_list = [0]*6
         beam_info = [0]*5
-        beam = mod.LvObjMOD.Beam(screen.get_size())
         game_over = False
    
     #Game Loop
@@ -259,8 +264,7 @@ class Level:
 
             P1_Laser = Player_1.shoot_laser()#Checks to see if player shoots this frame
             P2_Laser = Player_2.shoot_laser()
-                        
-            beam_info = beam.rotate()
+
         #Screen wrapping
             Player_1.screen_wrap() #Screen Wrapping for P1
             Player_2.screen_wrap() #Screen wrapping for P2
@@ -270,15 +274,21 @@ class Level:
                 P2_Laser = Player_2.destroy_laser() #Destroy the incoming laser if so
                 
             if Player_2.checkHit(P1_Laser, False):
-                P1_Laser = Player_1.destroy_laser()            
+                P1_Laser = Player_1.destroy_laser()
 
-            Player_1.checkHit(beam.get_mask(), True)
-            Player_2.checkHit(beam.get_mask(), True)
-                    
+            Player_1.checkCollision(WallList)
+            Player_2.checkCollision(WallList)
+
+            if Player_1.checkLaserCollision(WallList):
+                P1_Laser = Player_1.destroy_laser()
+                
+            if Player_2.checkLaserCollision(WallList):
+                P2_Laser = Player_2.destroy_laser()
+                
             P1_list = Player_1.get_player() #Retrieves player sprite and rectangle positions and puts them in a list
             P2_list = Player_2.get_player()
            
-            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, COLOR) #Updates each players position on the screen
+            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info) #Updates each players position on the screen
            # print("Reaches end")
             clock.tick(60) #Limits game to 60 FPS
         pygame.quit() #Closes the window and quits the game  
@@ -289,7 +299,7 @@ class Level:
         WALL_AMOUNT = 3 #how many walls
         pygame.init()
         
-        screen = mod.ScrMOD.Screen() #Inits the display screen
+        screen = mod.ScrMOD.Screen(self.lvlnum) #Inits the display screen
         
         Player_1 = mod.PlrMOD.Player() #Inits player 1
         Player_2 = mod.PlrMOD.Player() #Inits player 2
@@ -347,7 +357,7 @@ class Level:
             P1_list = Player_1.get_player() #Retrieves player sprite and rectangle positions and puts them in a list
             P2_list = Player_2.get_player()
            
-            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, COLOR) #Updates each players position on the screen
+            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info) #Updates each players position on the screen
            # print("Reaches end")
             clock.tick(60) #Limits game to 60 FPS
         pygame.quit() #Closes the window and quits the game  

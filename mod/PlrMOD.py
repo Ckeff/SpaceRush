@@ -7,8 +7,10 @@ class Laser:
     def __init__(self): #Constructor
         super().__init__()
         self.speed = 25 #Limits how fast the laser moves when shot
+        self.Laser_RECT = pygame.Rect(0, 0, 0, 0)
         
     def make_laser(self, P_num, P_RECT_x, P_RECT_y, flip): #Using the current players positional information, creates a new laser and returns information about it in a list
+
         self.P_num = P_num
         self.flip = flip
         if self.P_num == 1: #Checks to see which sprite index to use
@@ -47,6 +49,22 @@ class Laser:
 
         self.Laser_RECT.x = Laser_RECT_in #Update the position of the laser hitbox
         return self.Laser_RECT.x
+    
+    def checkCollision(self, WallList): #Checks collision between player and wall
+        flag = False
+        for i in WallList: #checks to see if player collides with any existing walls
+            if pygame.Rect.colliderect(self.Laser_RECT, pygame.Rect(i.x-7, i.y, i.width, i.height)):
+                flag = True
+            elif pygame.Rect.colliderect(self.Laser_RECT, pygame.Rect((i.x-44)+i.width, i.y, i.width, i.height)):
+                if(self.Laser_RECT.x <= i.x+i.width+2):
+                    flag = True
+            if pygame.Rect.colliderect(self.Laser_RECT, pygame.Rect(i.x, i.y, i.width, i.height)):
+                if(self.Laser_RECT.y <= i.y+i.height and self.Laser_RECT.y >= i.y+i.height-10):
+                    flag = True
+            elif pygame.Rect.colliderect(self.Laser_RECT, pygame.Rect(i.x, i.y-7, i.width, i.height)):
+                flag = True
+        #print(flag)
+        return flag
 
 class Player:
     def __init__(self): #Constructor
@@ -122,11 +140,25 @@ class Player:
 
         return flag
 
-    def checkCollision(self, player, WallList, playernumber): #Checks collision between player and wall
+    def checkCollision(self, WallList): #Checks collision between player and wall
         for i in WallList: #checks to see if player collides with any existing walls
-            if pygame.Rect.colliderect(player, pygame.Rect(i.x, i.y, i.height, i.width)):
-                self.init_player(playernumber)
-                
+            if pygame.Rect.colliderect(self.RECT, pygame.Rect(i.x-7, i.y, i.width, i.height)):
+                self.accx = 0
+            elif pygame.Rect.colliderect(self.RECT, pygame.Rect((i.x-44)+i.width, i.y, i.width, i.height)):
+                if(self.RECT.x <= i.x+i.width+2):
+                    self.accx = 0
+                    self.RECT.x+=2
+            if pygame.Rect.colliderect(self.RECT, pygame.Rect(i.x, i.y, i.width, i.height)):
+                if(self.RECT.y <= i.y+i.height and self.RECT.y >= i.y+i.height-10):
+                    self.accy = 0
+                    self.RECT.y+=2
+            elif pygame.Rect.colliderect(self.RECT, pygame.Rect(i.x, i.y-7, i.width, i.height)):
+                    self.accy = 0
+                        
+    def checkLaserCollision(self, WallList):
+        if self.laserShot.checkCollision(WallList):
+            return True
+        return False
 #--------Movement--------
     def movement(self):
         key = pygame.key.get_pressed()
@@ -257,29 +289,35 @@ class Player:
                             #Returns information about the laser
         key = pygame.key.get_pressed()
         if self.laserCoolDownCount < self.laserCoolDown:
+            #print("laser cool down is incrementing")
             self.laserCoolDownCount += 1
+            #print(self.laserCoolDownCount)
 
-        else:
+        elif self.laserCoolDownCount >= self.laserCoolDown:
             if self.laserActive == False: #If the player has not shot a laser
                 if self.P_num == 1 and key[pygame.K_LSHIFT]: #If player 1 and left shift is pressed
+                    #print("Player 1 fires while laser isnt active")
                     self.laserInfo = self.laserShot.make_laser(self.P_num, self.RECT.x, self.RECT.y, self.flip) #Creates a new laser
                     self.laserActive = True #Sets the active laser flag to true
 
                 if self.P_num == 2 and key[pygame.K_KP0]: #If player 2 and Num0 is pressed
+                    #print("Player 2 fires while laser isnt active")
                     self.laserInfo = self.laserShot.make_laser(self.P_num, self.RECT.x, self.RECT.y, self.flip) #Creates a new laser
                     self.laserActive = True #Sets the active laser flag to true
 
             if self.laserActive == True: #If the laser is active
-                    if self.laserCurLife < self.laserEndLife: #If the laser has not reached it's end of life yet
-                        self.laserInfo[1] = self.laserShot.laser_movement(self.laserInfo[1])#Move the laser
-                        self.laserInfo[1] = self.laserShot.screen_wrap(self.screen_size, self.laserInfo[1])
-                        self.laserCurLife += 1 #Increase life count by 1
+                if self.laserCurLife < self.laserEndLife: #If the laser has not reached it's end of life yet
+                    #print("Lasers current life is less than the max and laser is active")
+                    self.laserInfo[1] = self.laserShot.laser_movement(self.laserInfo[1])#Move the laser
+                    self.laserInfo[1] = self.laserShot.screen_wrap(self.screen_size, self.laserInfo[1])
+                    self.laserCurLife += 1 #Increase life count by 1
 
-                    else: #If the laser has reached it's end of life
-                        self.laserCurLife = 0 #Reset the lasers current life to 0
-                        self.laserInfo = [0]*5 #Clear any information about the laser
-                        self.laserActive = False #Sets the laser to inactive
-                        self.laserCoolDownCount = 0 #Activates cool down
+                else: #If the laser has reached it's end of life
+                    #print("Lasers current life reached the max and laser is active")
+                    self.laserCurLife = 0 #Reset the lasers current life to 0
+                    self.laserInfo = [0]*5 #Clear any information about the laser
+                    self.laserActive = False #Sets the laser to inactive
+                    self.laserCoolDownCount = 0 #Activates cool down
                     
                     
         return self.laserInfo
@@ -289,6 +327,7 @@ class Player:
         self.laserInfo = [0]*5 #Clear any information about the laser
         self.laserActive = False #Sets the laser to inactive
         self.laserCoolDownCount = 0 #Activates cool down
+        self.laserShot.Laser_RECT = pygame.Rect(0,0,0,0)
         return self.laserInfo
 
     def Game_Over(self): #Checks to see if either player lost all of their lives

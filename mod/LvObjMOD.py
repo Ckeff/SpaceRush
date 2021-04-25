@@ -7,18 +7,24 @@ import mod.SprMOD
 #(Will probably be mostly used in LvMOD.py)
 
 class Wall:
-    def __init__(self, x, y, width, height, color, screen): #Constructor
+    def __init__(self, x, y, width, height, vert_flag, screen): #Constructor
         #Initializes rectangle
         pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
         self.height = height
         self.width = width
-        self.color = color
+        #self.color = color
         self.screen = screen
         #Creates rectangle
-        self.image = pygame.Surface([width, height])
-        self.image.fill(color)
+        
+        if vert_flag:
+            sprite_name = 'vertical_wall.png'
+        else:
+            sprite_name = 'horizontal_wall.png'
+            
+        self.image = pygame.image.load(os.path.join('spr',sprite_name)).convert_alpha()
+        #self.image.fill(color)
         self.rect = self.image.get_rect()
 
 
@@ -33,7 +39,14 @@ class Asteroid:
             self.Ast_RECT = pygame.Rect(random.randrange(screen_size[0]), random.randrange(screen_size[1]), 256, 256)
             if not pygame.Rect.colliderect(self.Ast_RECT, P1_RECT) and not pygame.Rect.colliderect(self.Ast_RECT, P2_RECT):
                 self.spawn_flag = True
-        self.astr_sprite = pygame.image.load(os.path.join('spr','ast.png')).convert_alpha() #Grabs the location of the sprite
+        name_select = random.randrange(1, 3)
+        if name_select == 1:
+            sprite_name = 'ast.png'
+        elif name_select == 2:
+            sprite_name = 'ast2.png'
+        elif name_select == 3:
+            sprite_name = 'ast3.png'
+        self.astr_sprite = pygame.image.load(os.path.join('spr',sprite_name)).convert_alpha() #Grabs the location of the sprite
         rand_max = 3 #Max possible movement speed of the asteroids
         self.move_x = random.randrange(rand_max*-1, rand_max)
         while self.move_x == 0:
@@ -91,8 +104,15 @@ class sm_Asteroid(Asteroid): #Inherits classes from Asteroid, constructor takes 
         self.move_y = random.randrange(rand_max*-1, rand_max)
         while self.move_y == 0:
             self.move_y = random.randrange(rand_max*-1, rand_max)
-            
-        self.astr_sprite = pygame.image.load(os.path.join('spr','sm_ast.png')).convert_alpha()
+
+        name_select = random.randrange(1, 3)
+        if name_select == 1:
+            sprite_name = 'sm_ast.png'
+        elif name_select == 2:
+            sprite_name = 'sm_ast2.png'
+        elif name_select == 3:
+            sprite_name = 'sm_ast3.png'  
+        self.astr_sprite = pygame.image.load(os.path.join('spr',sprite_name)).convert_alpha()
         
 
 class Beam: #Calls sprite attribute functions to rotate the beam around
