@@ -6,14 +6,18 @@ import mod.SprMOD #Imports the module containing sprites and their attributes
 
 
 class Level:
-    def __init__(self, lvlnum): #Takes the level selection as input and selects the desired level layout
+    def __init__(self): #Takes the level selection as input and selects the desired level layout
+        super().__init__()    
+        
+    def lvl_selector(self, lvlnum):
         self.lvlnum = lvlnum
         if lvlnum == 1:
-            self.Lvl_1()
+            option = self.Lvl_1()
         elif lvlnum == 2:
-            self.Lvl_2()
+            option = self.Lvl_2()
         elif lvlnum == 3:
-            self.Lvl_3()
+            option = self.Lvl_3()
+        return option
 
     def Lvl_1(self): #Asteroids level
         COLOR = (0, 0, 0) #color for debug wall
@@ -22,8 +26,8 @@ class Level:
         
         screen = mod.ScrMOD.Screen(self.lvlnum) #Inits the display screen
         
-        Player_1 = mod.PlrMOD.Player() #Inits player 1
-        Player_2 = mod.PlrMOD.Player() #Inits player 2
+        Player_1 = mod.PlrMOD.Player(500) #Inits player 1
+        Player_2 = mod.PlrMOD.Player(500) #Inits player 2
         Player_1.init_player(1) #Inits player 1 specific data
         Player_2.init_player(2) #Inits player 2 specific data
 
@@ -51,7 +55,7 @@ class Level:
         smast_empty = 0 #Inits the count of empty small asteroid slots
         ast_respawn_max = 150 #Max repawn time of a big asteroid
         ast_respawn_count = [0]*3 #Inits the list of each big asteroids respawn count
-        game_over = False
+        winner = [0]*2
         while i < 3: #Creates three asteroids and grabs their info
             ast[i] = mod.LvObjMOD.Asteroid(screen.get_size(), P1_list, P2_list)
             ast_list[i] = ast[i].get_ast()
@@ -188,7 +192,10 @@ class Level:
                     ast_respawn_count[i] = 0
 
                 i+=1
-                    
+
+            winner[0] = Player_1.win_game(Player_2.game_over())
+            winner[1] = Player_2.win_game(Player_1.game_over())
+            
             P1_list = Player_1.get_player() #Retrieves player sprite and rectangle positions and puts them in a list
             P2_list = Player_2.get_player()
 
@@ -207,7 +214,14 @@ class Level:
                     smast_list[j+1] = smast[j+1].get_ast()
                 j += 2
            
-            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info) #Updates each object's position on the screen
+            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, winner) #Updates each object's position on the screen
+            
+            if winner[0] or winner[1]:
+                option = self.restart_quit()
+                if option != None:
+                    pygame.display.quit()
+                    return option
+                
             clock.tick(60) #Limits game to 60 FPS
         pygame.quit() #Closes the window and quits the game
 
@@ -219,21 +233,21 @@ class Level:
         
         screen = mod.ScrMOD.Screen(self.lvlnum) #Inits the display screen
         
-        Player_1 = mod.PlrMOD.Player() #Inits player 1
-        Player_2 = mod.PlrMOD.Player() #Inits player 2
+        Player_1 = mod.PlrMOD.Player(150) #Inits player 1
+        Player_2 = mod.PlrMOD.Player(150) #Inits player 2
         Player_1.init_player(1) #Inits player 1 specific data
         Player_2.init_player(2) #Inits player 2 specific data
 
         WallList = [0] * 6 #creates list for all walls based on wall amount constant
-        #left and right
-        WallList[0] = mod.LvObjMOD.Wall(0, 0, 50, 650, True, screen)
-        WallList[1] = mod.LvObjMOD.Wall(1110, 0, 50, 650, True, screen)
+        #middle walls
+        WallList[0] = mod.LvObjMOD.Wall(550, 0, 50, 650, True, screen)
+        WallList[1] = mod.LvObjMOD.Wall(0, 300, 1200, 50, False, screen)
         #top and bottom
         WallList[2] = mod.LvObjMOD.Wall(0, 0, 1200, 50, False, screen)
         WallList[3] = mod.LvObjMOD.Wall(0, 600, 1200, 50, False, screen)
-        #middle walls
-        WallList[4] = mod.LvObjMOD.Wall(550, 0, 50, 650, True, screen)
-        WallList[5] = mod.LvObjMOD.Wall(0, 300, 1200, 50, False, screen)
+        #left and right
+        WallList[4] = mod.LvObjMOD.Wall(0, 0, 50, 650, True, screen)
+        WallList[5] = mod.LvObjMOD.Wall(1104, 0, 50, 650, True, screen)
 
         clock = pygame.time.Clock() #Used for managing how fast the screen updates
         done = False #Flag for closing the game (if user presses X)
@@ -244,7 +258,7 @@ class Level:
         ast_list = [0]*3
         smast_list = [0]*6
         beam_info = [0]*5
-        game_over = False
+        winner = [0]*2
    
     #Game Loop
         while not done:
@@ -254,9 +268,6 @@ class Level:
                     done = True #Sets flag for quitting the game
          
         #Game logic
-                    
-            #game_over = Player_1.Game_Over()
-            #game_over = Player_2.Game_Over()
                                  
             #Movement
             Player_1.movement()#Player 1 movement function
@@ -284,11 +295,20 @@ class Level:
                 
             if Player_2.checkLaserCollision(WallList):
                 P2_Laser = Player_2.destroy_laser()
+
+            winner[0] = Player_1.win_game(Player_2.game_over())
+            winner[1] = Player_2.win_game(Player_1.game_over())
                 
             P1_list = Player_1.get_player() #Retrieves player sprite and rectangle positions and puts them in a list
             P2_list = Player_2.get_player()
            
-            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info) #Updates each players position on the screen
+            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, winner) #Updates each players position on the screen
+            
+            if winner[0] or winner[1]:
+                option = self.restart_quit()
+                if option != None:
+                    pygame.display.quit()
+                    return option
            # print("Reaches end")
             clock.tick(60) #Limits game to 60 FPS
         pygame.quit() #Closes the window and quits the game  
@@ -301,8 +321,8 @@ class Level:
         
         screen = mod.ScrMOD.Screen(self.lvlnum) #Inits the display screen
         
-        Player_1 = mod.PlrMOD.Player() #Inits player 1
-        Player_2 = mod.PlrMOD.Player() #Inits player 2
+        Player_1 = mod.PlrMOD.Player(300) #Inits player 1
+        Player_2 = mod.PlrMOD.Player(300) #Inits player 2
         Player_1.init_player(1) #Inits player 1 specific data
         Player_2.init_player(2) #Inits player 2 specific data
 
@@ -318,7 +338,7 @@ class Level:
         smast_list = [0]*6
         beam_info = [0]*5
         beam = mod.LvObjMOD.Beam(screen.get_size())
-        game_over = False
+        winner = [0]*2
    
     #Game Loop
         while not done:
@@ -353,11 +373,28 @@ class Level:
 
             Player_1.checkHit(beam.get_mask(), True)
             Player_2.checkHit(beam.get_mask(), True)
-                    
+
+            winner[0] = Player_1.win_game(Player_2.game_over())
+            winner[1] = Player_2.win_game(Player_1.game_over())
+           # print(winner[0])
             P1_list = Player_1.get_player() #Retrieves player sprite and rectangle positions and puts them in a list
             P2_list = Player_2.get_player()
            
-            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info) #Updates each players position on the screen
+            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, winner) #Updates each players position on the screen
+
+            if winner[0] or winner[1]:
+                option = self.restart_quit()
+                if option != None:
+                    pygame.display.quit()
+                    return option
            # print("Reaches end")
             clock.tick(60) #Limits game to 60 FPS
-        pygame.quit() #Closes the window and quits the game  
+        pygame.quit() #Closes the window and quits the game
+
+
+    def restart_quit(self):
+        key = pygame.key.get_pressed()
+        if key[pygame.K_r]:
+            return True
+        if key[pygame.K_q]:
+            return False

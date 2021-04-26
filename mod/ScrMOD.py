@@ -12,12 +12,12 @@ class Screen:
         self.screen = pygame.display.set_mode(self.size) #Initalize the screen surface
         pygame.display.set_caption("Space Raiders") #Window title
         if lvlnum == 1: #Load Background
-            self.animation_speed = 10
+            self.animation_speed = 10 #Smaller the number, the faster the animation
             self.BG = [pygame.image.load('spr\BG.png').convert(), pygame.image.load('spr\BG2.png').convert(), pygame.image.load('spr\BG3.png').convert(), pygame.image.load('spr\BG4.png').convert(), pygame.image.load('spr\BG5.png').convert()]
             self.BG2 = [0]
         elif lvlnum == 2:
-            self.animation_speed = 10
-            self.BG = [pygame.image.load('spr\BG22_1.png').convert(), pygame.image.load('spr\BG22_1.png').convert()]
+            self.animation_speed = 14
+            self.BG = [pygame.image.load('spr\BG22_1.png').convert(), pygame.image.load('spr\BG22_1.png').convert(), pygame.image.load('spr\BG22_1.png').convert(), pygame.image.load('spr\BG22_2.png').convert(), pygame.image.load('spr\BG22_3.png').convert(), pygame.image.load('spr\BG22_4.png').convert(), pygame.image.load('spr\BG22_5.png').convert(), pygame.image.load('spr\BG22_5.png').convert(), pygame.image.load('spr\BG22_5.png').convert()]
             self.BG2 = [0]
             
         elif lvlnum == 3:
@@ -27,6 +27,8 @@ class Screen:
             
         self.BG_Frames = len(self.BG) - 1
         self.BG_Frames2 = len(self.BG2) - 1
+        self.P1_WIN = pygame.image.load('spr\P1_WIN.png').convert_alpha()
+        self.P2_WIN = pygame.image.load('spr\P2_WIN.png').convert_alpha()
         
         self.i = 0
         self.i2 = 0
@@ -35,7 +37,7 @@ class Screen:
         self.index = 0
         self.index2 = 0
         
-    def update(self, P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info):
+    def update(self, P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, winner):
  
         #print(self.i)
         #print(index)
@@ -95,6 +97,15 @@ class Screen:
         if WallList[0] != 0:
             for i in WallList: #draws all rectangles in list
                 self.screen.blit(i.image, (i.x, i.y))
+                
+        self.screen.blit(P1_list[5], (P1_list[7][0], P1_list[7][1])) #Sets the lives count to display
+        self.screen.blit(P2_list[5], (P2_list[7][0], P2_list[7][1])) #Sets the Player sprite to the current location of the rectangle on the screen
+
+        if winner[0] == True:
+            self.screen.blit(self.P1_WIN, (0,0)) 
+        elif winner[1] == True:
+            self.screen.blit(self.P2_WIN, (0,0))
+
         pygame.display.flip() #Updates the screen
         
 

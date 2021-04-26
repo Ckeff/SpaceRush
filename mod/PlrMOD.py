@@ -1,5 +1,6 @@
 import pygame
 import mod.SprMOD
+import os
 #PlrMOD.py
 #Contains all classes related to player functionality (including lasers)
 
@@ -67,7 +68,7 @@ class Laser:
         return flag
 
 class Player:
-    def __init__(self): #Constructor
+    def __init__(self, respawn_time): #Constructor
         super().__init__()
         
         self.accx = 0 #Player acceleration in the x axis
@@ -79,12 +80,15 @@ class Player:
         self.laserActive = False #Flag for if a player's laser is active
         self.laserEndLife = 15 #Sets the max time a laser can be out for
         self.laserCurLife = 0 #Counts the current time a laser has been active
-        self.laserCoolDown = 50 #Sets the max time the player must wait before using the laser again
+        self.laserCoolDown = 25 #Sets the max time the player must wait before using the laser again
         self.laserCoolDownCount = self.laserCoolDown #Counts down the current time a laser hasnt been shot
-        self.safeRespawnTime = 500 #Sets the max time a player is invincible for when respawning
-        self.safeRespawnTimeCount = self.safeRespawnTime #Counts how long player is invincible for
+        self.safeRespawnTime = respawn_time #Sets the max time a player is invincible for when respawning
+        self.safeRespawnTimeCount = 0 #Counts how long player is invincible for
         self.lives = 3 #Counts how many lives the player has left
         self.screen_size = [0]*2 #Inits a list to store information about the display window
+        self.dying = False
+        self.lose = False
+        self.win = False
         
     def init_player(self, P_num):
         self.P_num = P_num
@@ -92,12 +96,16 @@ class Player:
         if self.P_num == 1:
             P_pos = (288, 100)
             self.P_Sprite = mod.SprMOD.spr_Player1() #Load Player Sprite
+            self.L_Sprite = [pygame.image.load(os.path.join('spr','lives1_0.png')).convert_alpha(), pygame.image.load(os.path.join('spr','lives1_1.png')).convert_alpha(), pygame.image.load(os.path.join('spr','lives1_2.png')).convert_alpha(), pygame.image.load(os.path.join('spr','lives1_3.png')).convert_alpha()]
+            self.L_spr_pos = (30, 15)
             self.flip = False #Flip flag for the player's sprite
 
         elif self.P_num == 2:
             P_pos = (864, 100)
             self.P_Sprite = mod.SprMOD.spr_Player2() #Load Player Sprite
+            self.L_Sprite = [pygame.image.load(os.path.join('spr','lives2_0.png')).convert_alpha(), pygame.image.load(os.path.join('spr','lives2_1.png')).convert_alpha(), pygame.image.load(os.path.join('spr','lives2_2.png')).convert_alpha(), pygame.image.load(os.path.join('spr','lives2_3.png')).convert_alpha()]
             self.P_Sprite.flip()
+            self.L_spr_pos = (1152-69-30, 15)
             self.flip = True #Flip flag for the player's sprite
 
         self.RECT = pygame.Rect(P_pos[0], P_pos[1], 64, 64) #Player Hitbox (X, Y, Width, Height)
@@ -105,39 +113,40 @@ class Player:
     def checkHit(self, P_Laser, mask_flag): #Checks if a player has been hit, returns true if so
         flag = False
         self.collide_point = 0
-        if mask_flag == False and self.safeRespawnTimeCount == self.safeRespawnTime: #Checks for collisions via rectangles that are passed in; for more general hit box collisions
-            if pygame.Rect.colliderect(self.RECT, pygame.Rect(P_Laser[1], P_Laser[2], P_Laser[3], P_Laser[4])) and self.safeRespawnTimeCount == self.safeRespawnTime:
-                self.lives -= 1 #Decrease life count by 1
-                if self.P_num == 1:
-                    if(self.lives > -1):
-                        print("P1 Lives: ", self.lives)
-                elif self.P_num == 2:
-                    if(self.lives > -1):
-                        print("P2 Lives: ", self.lives)
+        if self.safeRespawnTimeCount == self.safeRespawnTime and self.dying == False and self.win == False and self.lose == False: #Checks for collisions via rectangles that are passed in; for more general hit box collisions
+            self.P_Sprite.cooldown(False, self.flip)
+            if mask_flag == False:
+                if pygame.Rect.colliderect(self.RECT, pygame.Rect(P_Laser[1], P_Laser[2], P_Laser[3], P_Laser[4])) and self.safeRespawnTimeCount == self.safeRespawnTime:
+                    if self.lives != 0:
+                        self.lives -= 1 #Decrease life count by 1
+                        self.dying = True
+                        flag = True #Returns a true flag for player being hit
+                    if self.lives == 0:
+                        self.lose = True
+                
+            elif mask_flag == True: #Checks for collisions via sprite masks that are passed in; for more precise hit box collisions, easier for rotating objects
+                self.P_Sprite.rect[0] = self.RECT.x #Update Player sprite's rect attribute with new position
+                self.P_Sprite.rect[1] = self.RECT.y
+                self.P_Sprite.make_mask() #Update the player's sprite mask
+                self.collide_point = pygame.sprite.collide_mask(self.P_Sprite, P_Laser) #Checks to see if the player's mask attribute collides with the other object's mask attribute passed in
+                if self.collide_point != None and self.safeRespawnTimeCount == self.safeRespawnTime:
+                    if self.lives != 0:
+                        self.lives -= 1
+                        self.dying = True
+                        flag = True
+                    if self.lives == 0:
+                        self.lose = True
+                        
+        elif self.safeRespawnTimeCount < self.safeRespawnTime and self.dying == False: #If cooldown time is less than the limit, increment by 1
+            self.P_Sprite.cooldown(True, self.flip)
+            self.safeRespawnTimeCount += 1
+            
+        elif self.dying == True:
+            self.dying = self.P_Sprite.blow_up(self.flip, self.lose)
+            if self.dying == False and self.lose == False:
                 self.init_player(self.P_num) #Respawn player at starting position
                 self.safeRespawnTimeCount = 0 #Resets respawn cooldown time
-                flag = True #Returns a true flag for player being hit
-                
-        elif self.safeRespawnTimeCount == self.safeRespawnTime: #Checks for collisions via sprite masks that are passed in; for more precise hit box collisions, easier for rotating objects
-            self.P_Sprite.rect[0] = self.RECT.x #Update Player sprite's rect attribute with new position
-            self.P_Sprite.rect[1] = self.RECT.y
-            self.P_Sprite.make_mask() #Update the player's sprite mask
-            self.collide_point = pygame.sprite.collide_mask(self.P_Sprite, P_Laser) #Checks to see if the player's mask attribute collides with the other object's mask attribute passed in
-            if self.collide_point != None and self.safeRespawnTimeCount == self.safeRespawnTime:
-                self.lives -= 1
-                if self.P_num == 1:
-                    if(self.lives > -1):
-                        print("P1 Lives: ", self.lives)
-                elif self.P_num == 2:
-                    if(self.lives > -1):
-                        print("P2 Lives: ", self.lives)
-                self.init_player(self.P_num)
-                self.safeRespawnTimeCount = 0
                 flag = True
-            
-        elif self.safeRespawnTimeCount < self.safeRespawnTime: #If cooldown time is less than the limit, increment by 1
-            self.safeRespawnTimeCount += 1
-
         return flag
 
     def checkCollision(self, WallList): #Checks collision between player and wall
@@ -162,7 +171,7 @@ class Player:
 #--------Movement--------
     def movement(self):
         key = pygame.key.get_pressed()
-        if self.P_num == 1: #Player 1 controls
+        if self.P_num == 1 and self.dying == False and self.lose == False: #Player 1 controls
             if key[pygame.K_w] and not key[pygame.K_s]: #Move Up
                 self.acc_up()
             if key[pygame.K_s] and not key[pygame.K_w]: #Move Down
@@ -181,7 +190,7 @@ class Player:
             if not key[pygame.K_d] or key[pygame.K_a]: #Decelerate Right
                 self.dec_right()
                     
-        elif self.P_num == 2: #Player 2 controls
+        elif self.P_num == 2 and self.dying == False and self.lose == False: #Player 2 controls
             if key[pygame.K_UP] and not key[pygame.K_DOWN]: #Move Up
                 self.acc_up()
             if key[pygame.K_DOWN] and not key[pygame.K_UP]: #Move Down
@@ -199,6 +208,10 @@ class Player:
                 self.dec_left()
             if not key[pygame.K_RIGHT] or key[pygame.K_LEFT]: #Decelerate Right
                 self.dec_right()
+                
+        elif self.dying:
+            self.accy = 0
+            self.accx = 0
                 
  #-------Acceleration Functions--------
     def acc_up(self):
@@ -279,7 +292,7 @@ class Player:
             
         
     def get_player(self): #Returns a list containing the player sprite to be used and the position of the hitbox (RECT) 
-        P_list = [self.P_Sprite.image, self.RECT.x, self.RECT.y, self.RECT.w, self.RECT.h]
+        P_list = [self.P_Sprite.image, self.RECT.x, self.RECT.y, self.RECT.w, self.RECT.h, self.L_Sprite[self.lives], self.lives, self.L_spr_pos]
         return P_list
     
     def send_screen(self, screen_size):
@@ -293,7 +306,7 @@ class Player:
             self.laserCoolDownCount += 1
             #print(self.laserCoolDownCount)
 
-        elif self.laserCoolDownCount >= self.laserCoolDown:
+        elif self.laserCoolDownCount >= self.laserCoolDown and self.lose == False and self.dying == False:
             if self.laserActive == False: #If the player has not shot a laser
                 if self.P_num == 1 and key[pygame.K_LSHIFT]: #If player 1 and left shift is pressed
                     #print("Player 1 fires while laser isnt active")
@@ -329,16 +342,18 @@ class Player:
         self.laserCoolDownCount = 0 #Activates cool down
         self.laserShot.Laser_RECT = pygame.Rect(0,0,0,0)
         return self.laserInfo
+    
+    
+    def game_over(self): #Checks to see if either player lost all of their lives
+        #print("Player ", self.P_num, "self.lose = ", self.lose)
+        return self.lose
 
-    def Game_Over(self): #Checks to see if either player lost all of their lives
-        flag = False
-        if self.lives < 3:
-            if self.P_num == 1:
-                print("Player 2 Wins")
-                flag = True
-            elif self.P_num == 2:
-                print("Player 1 Wins")
-                flag = True
-                
-        return flag
+    def win_game(self, lose):
+        if lose == True and self.lose == False:
+            self.win = True
+            self.dying = False
+            self.P_Sprite.win(self.flip)
+            return True
+        else:
+            return False
             
