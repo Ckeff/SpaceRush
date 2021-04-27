@@ -2,6 +2,7 @@ import pygame
 import random
 import os
 import mod.SprMOD
+import mod.SndMOD
 #LvObjMOD.py
 #Contains all the classes relating to hazards and walls in in levels
 #(Will probably be mostly used in LvMOD.py)
@@ -26,33 +27,57 @@ class Wall:
         self.image = pygame.image.load(os.path.join('spr',sprite_name)).convert_alpha()
         #self.image.fill(color)
         self.rect = self.image.get_rect()
-
+        
 class Teleporter:
     def __init__(self, color, T_num, T_pos): #Constructor
         super().__init__()
         pygame.sprite.Sprite.__init__(self)
         self.T_num = T_num
         self.T_pos = T_pos
-        self.RECT = pygame.Rect(T_pos[0], T_pos[1], 64, 64) #Player Hitbox (X, Y, Width, Height)
+        #self.RECT = pygame.Rect(T_pos[0], T_pos[1], 64, 64) #Player Hitbox (X, Y, Width, Height)
         self.x = T_pos[0]
         self.y = T_pos[1]
+        self.i = 0
+        self.j = 0
         self.width = 64
-        self.height = 64
-
+        self.height = 250
+        self.player_y = self.T_pos[1]+(self.height/2)-32
+        self.snd = mod.SndMOD.snd(.5)
         if color == 1:
-            sprite_name = 'P1.png'
+            sprite_name = ['b1.png', 'b2.png']
+        if color == 2:
+            sprite_name = ['r1.png', 'r2.png']
+        if color == 3:
+            sprite_name = ['w1.png', 'w2.png']
+        if color == 4:
+            sprite_name = ['y1.png', 'y2.png']
 
-        self.image = pygame.image.load(os.path.join('spr',sprite_name)).convert_alpha()
+        self.spr = [pygame.image.load(os.path.join('spr','teleporter_'+sprite_name[0])).convert_alpha(), pygame.image.load(os.path.join('spr','teleporter_'+sprite_name[1])).convert_alpha()]
+        self.image = self.spr[0]
 
-    def getRECT(self):
+    def getRECT(self):      
         if self.T_num == 4 or self.T_num == 7 or self.T_num == 6 or self.T_num == 5:
-            self.RECT = pygame.Rect(self.T_pos[0]-80, self.T_pos[1], 64, 64)
-            return self.RECT
+            new_pos = (self.T_pos[0]-80, self.player_y)
         else:
-            self.RECT = pygame.Rect(self.T_pos[0]+80, self.T_pos[1], 64, 64)
-            return self.RECT
-
-
+            new_pos = (self.T_pos[0]+80, self.player_y)
+        #self.flash()
+        return new_pos
+        
+    def flash(self, on, sound):
+        if on:
+            self.i = 1
+            self.image = self.spr[self.i]
+            if sound:
+                self.snd.Teleporter()
+        else:
+            #print(self.j)
+            if self.i == 1:
+                self.j += 1
+            if self.j == 5:
+                self.i = 0
+                self.image = self.spr[self.i]
+                self.j = 0
+        
 class Asteroid:
     def __init__(self, screen_size, P1_list, P2_list): #Constructor, takes screen size and info about P1 and P2 to spawn asteroids
         super().__init__()
@@ -83,7 +108,7 @@ class Asteroid:
             
         self.scw_dist = -256
         self.ast_info = [0] * 5
-        
+        self.snd = mod.SndMOD.snd(.5)
     def movement(self):
         self.Ast_RECT.x += self.move_x #Move at generated speed
         self.Ast_RECT.y += self.move_y #Move at generated speed
@@ -97,6 +122,7 @@ class Asteroid:
         P_LRECT = pygame.Rect(P_laser[1],P_laser[2],P_laser[3],P_laser[4])
         if pygame.Rect.colliderect(self.Ast_RECT, P_LRECT):
             flag = True
+            self.snd.AstExplode()
         return flag
         
     def screen_wrap(self): #Screen Wrapping
@@ -138,16 +164,18 @@ class sm_Asteroid(Asteroid): #Inherits classes from Asteroid, constructor takes 
         elif name_select == 3:
             sprite_name = 'sm_ast3.png'  
         self.astr_sprite = pygame.image.load(os.path.join('spr',sprite_name)).convert_alpha()
-        
+        self.snd = mod.SndMOD.snd(.5)        
 
 class Beam: #Calls sprite attribute functions to rotate the beam around
 
     def __init__(self, screen_size):
         self.Beam_spr = mod.SprMOD.spr_BEAM(screen_size)
         self.beam_info = [0]*5
+        self.snd = mod.SndMOD.snd(.5)
         
     def rotate(self):
         self.beam_info = self.Beam_spr.rotate()
+        #self.snd.Beam()    
         return self.beam_info
         
     def get_info(self):

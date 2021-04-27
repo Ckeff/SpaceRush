@@ -97,11 +97,10 @@ class Screen:
         if WallList[0] != 0:
             for i in WallList: #draws all rectangles in list
                 self.screen.blit(i.image, (i.x, i.y))
-
+                
         if TeleporterList[0] != 0:
             for i in TeleporterList: #draws all teleporters in list
                 self.screen.blit(i.image, (i.x, i.y))
-
                 
         self.screen.blit(P1_list[5], (P1_list[7][0], P1_list[7][1])) #Sets the lives count to display
         self.screen.blit(P2_list[5], (P2_list[7][0], P2_list[7][1])) #Sets the Player sprite to the current location of the rectangle on the screen

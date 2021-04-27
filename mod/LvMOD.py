@@ -77,8 +77,8 @@ class Level:
             Player_1.movement()#Player 1 movement function
             Player_2.movement()#Player 2 movement function
 
-            P1_Laser = Player_1.shoot_laser()#Checks to see if player shoots this frame
-            P2_Laser = Player_2.shoot_laser()
+            P1_Laser = Player_1.shoot_laser(TeleporterList)#Checks to see if player shoots this frame
+            P2_Laser = Player_2.shoot_laser(TeleporterList)
 
             i = 0
             j = 0
@@ -251,15 +251,14 @@ class Level:
         WallList[5] = mod.LvObjMOD.Wall(1104, 0, 50, 650, True, screen)
 
         TeleporterList = [0] * 8
-        TeleporterList[0] = mod.LvObjMOD.Teleporter(1, 1, (50, 150))
-        TeleporterList[1] = mod.LvObjMOD.Teleporter(1, 2, (610, 450))
-        TeleporterList[2] = mod.LvObjMOD.Teleporter(1, 3, (610, 150))
-        TeleporterList[3] = mod.LvObjMOD.Teleporter(1, 4, (1030, 450))
-        TeleporterList[4] = mod.LvObjMOD.Teleporter(1, 5, (475, 450))
-        TeleporterList[5] = mod.LvObjMOD.Teleporter(1, 6, (1030, 150))
-        TeleporterList[6] = mod.LvObjMOD.Teleporter(1, 7, (475, 150))
-        TeleporterList[7] = mod.LvObjMOD.Teleporter(1, 8, (50, 450))
-
+        TeleporterList[0] = mod.LvObjMOD.Teleporter(1, 1, (50, 50))
+        TeleporterList[1] = mod.LvObjMOD.Teleporter(4, 2, (600, 350))
+        TeleporterList[2] = mod.LvObjMOD.Teleporter(2, 3, (600, 50))
+        TeleporterList[3] = mod.LvObjMOD.Teleporter(1, 4, (1040, 350))
+        TeleporterList[4] = mod.LvObjMOD.Teleporter(2, 5, (486, 350))
+        TeleporterList[5] = mod.LvObjMOD.Teleporter(4, 6, (1040, 50))
+        TeleporterList[6] = mod.LvObjMOD.Teleporter(3, 7, (486, 50))
+        TeleporterList[7] = mod.LvObjMOD.Teleporter(3, 8, (50, 350))
 
         clock = pygame.time.Clock() #Used for managing how fast the screen updates
         done = False #Flag for closing the game (if user presses X)
@@ -285,30 +284,33 @@ class Level:
             Player_1.movement()#Player 1 movement function
             Player_2.movement()#Player 2 movement function
 
-            P1_Laser = Player_1.shoot_laser()#Checks to see if player shoots this frame
-            P2_Laser = Player_2.shoot_laser()
+            P1_Laser = Player_1.shoot_laser(TeleporterList)#Checks to see if player shoots this frame
+            P2_Laser = Player_2.shoot_laser(TeleporterList)
 
-        #Screen wrapping
+        #Screen wrapping + Teleporting
             Player_1.screen_wrap() #Screen Wrapping for P1
             Player_2.screen_wrap() #Screen wrapping for P2
             
+            Player_1.checkTeleportCollision(TeleporterList)
+            Player_2.checkTeleportCollision(TeleporterList)
+
         #Screen-clearing + Drawing
+            Player_1.checkCollision(WallList)
+            Player_2.checkCollision(WallList)
+
             if Player_1.checkHit(P2_Laser, False): #Checks to see if a player collided with a player/satellite's laser or an asteroid
                 P2_Laser = Player_2.destroy_laser() #Destroy the incoming laser if so
                 
             if Player_2.checkHit(P1_Laser, False):
                 P1_Laser = Player_1.destroy_laser()
 
-            Player_1.checkCollision(WallList)
-            Player_2.checkCollision(WallList)
-            Player_1.checkTeleportCollision(TeleporterList)
-            Player_2.checkTeleportCollision(TeleporterList)
-            
             if Player_1.checkLaserCollision(WallList):
                 P1_Laser = Player_1.destroy_laser()
                 
             if Player_2.checkLaserCollision(WallList):
                 P2_Laser = Player_2.destroy_laser()
+
+
 
             winner[0] = Player_1.win_game(Player_2.game_over())
             winner[1] = Player_2.win_game(Player_1.game_over())
@@ -316,7 +318,7 @@ class Level:
             P1_list = Player_1.get_player() #Retrieves player sprite and rectangle positions and puts them in a list
             P2_list = Player_2.get_player()
            
-            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, winner, TeleporterList) #Updates each players position on the screen
+            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, winner, TeleporterList) #Updates each object's position on the screen
             
             if winner[0] or winner[1]:
                 option = self.restart_quit()
@@ -342,7 +344,6 @@ class Level:
 
         WallList = [0] * WALL_AMOUNT #creates list for all walls based on wall amount constant
         TeleporterList = [0]
-        
         clock = pygame.time.Clock() #Used for managing how fast the screen updates
         done = False #Flag for closing the game (if user presses X)
         Player_1.send_screen(screen.get_size())
@@ -371,8 +372,8 @@ class Level:
             Player_1.movement()#Player 1 movement function
             Player_2.movement()#Player 2 movement function
 
-            P1_Laser = Player_1.shoot_laser()#Checks to see if player shoots this frame
-            P2_Laser = Player_2.shoot_laser()
+            P1_Laser = Player_1.shoot_laser(TeleporterList)#Checks to see if player shoots this frame
+            P2_Laser = Player_2.shoot_laser(TeleporterList)
                         
             beam_info = beam.rotate()
         #Screen wrapping
@@ -395,7 +396,7 @@ class Level:
             P1_list = Player_1.get_player() #Retrieves player sprite and rectangle positions and puts them in a list
             P2_list = Player_2.get_player()
            
-            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, winner, TeleporterList) #Updates each players position on the screen
+            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, winner, TeleporterList) #Updates each object's position on the screen
 
             if winner[0] or winner[1]:
                 option = self.restart_quit()

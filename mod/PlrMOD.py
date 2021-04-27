@@ -1,5 +1,6 @@
 import pygame
 import mod.SprMOD
+import mod.SndMOD
 import os
 #PlrMOD.py
 #Contains all classes related to player functionality (including lasers)
@@ -9,7 +10,8 @@ class Laser:
         super().__init__()
         self.speed = 25 #Limits how fast the laser moves when shot
         self.Laser_RECT = pygame.Rect(0, 0, 0, 0)
-        
+        self.snd = mod.SndMOD.snd(.5)
+        self.laserInfo = [0]*5
     def make_laser(self, P_num, P_RECT_x, P_RECT_y, flip): #Using the current players positional information, creates a new laser and returns information about it in a list
 
         self.P_num = P_num
@@ -22,10 +24,11 @@ class Laser:
         if self.flip != True: #Checks to see which direction the laser should start at
             P_RECT_x = P_RECT_x+64
 
-        L_Sprite = pygame.image.load(Laser_name).convert_alpha()
-        L_pos = (P_RECT_x, P_RECT_y+16)
-        self.Laser_RECT = pygame.Rect(L_pos[0], L_pos[1], 32, 16)
-        self.laserInfo = [L_Sprite, self.Laser_RECT.x, self.Laser_RECT.y, self.Laser_RECT.w, self.Laser_RECT.h] #laserInfo = [Sprite index, X, Y, WIDTH, HEIGHT]
+        self.L_Sprite = pygame.image.load(Laser_name).convert_alpha()
+        self.L_pos = (P_RECT_x, P_RECT_y+16)
+        self.Laser_RECT = pygame.Rect(self.L_pos[0], self.L_pos[1], 32, 16)
+        self.laserInfo = [self.L_Sprite, self.Laser_RECT.x, self.Laser_RECT.y, self.Laser_RECT.w, self.Laser_RECT.h] #laserInfo = [Sprite index, X, Y, WIDTH, HEIGHT]
+        self.snd.Laser()
         return self.laserInfo
 
     def laser_movement(self, Laser_RECT_in): #Using the latest positional information stored in laserInfo, checks to see which direction the laser should move in and increases/decreases the position by the speed set.
@@ -67,6 +70,36 @@ class Laser:
         #print(flag)
         return flag
 
+    def checkTeleportCollision(self, teleList):
+        #print(self.teleporting)
+        for i in teleList:
+            i.flash(False, False)
+            if pygame.Rect.colliderect(self.Laser_RECT, pygame.Rect(i.x, i.y, i.width, i.height)) and self.laserInfo[0] != 0:
+                if(i.T_num == 1):
+                    new_pos = teleList[3].getRECT()
+                elif(i.T_num == 2):
+                    new_pos = teleList[5].getRECT()
+                elif(i.T_num == 3):
+                    new_pos = teleList[4].getRECT()                   
+                elif(i.T_num == 4):
+                    new_pos = teleList[0].getRECT()
+                elif(i.T_num == 5):
+                    new_pos = teleList[2].getRECT()
+                elif(i.T_num == 6):
+                    new_pos = teleList[1].getRECT()
+                elif(i.T_num == 7):
+                    new_pos = teleList[7].getRECT()
+                elif(i.T_num == 8):
+                    new_pos = teleList[6].getRECT()
+
+                self.Laser_RECT.x = new_pos[0]
+                self.Laser_RECT.y = new_pos[1]
+                self.laserInfo[1] = self.Laser_RECT.x
+                self.laserInfo[2] = self.Laser_RECT.y
+                i.flash(True, False)
+        return self.laserInfo
+
+
 class Player:
     def __init__(self, respawn_time): #Constructor
         super().__init__()
@@ -89,6 +122,9 @@ class Player:
         self.dying = False
         self.lose = False
         self.win = False
+        self.snd = mod.SndMOD.snd(.5)
+        self.snd.Respawn()
+        self.teleporting = False
         
     def init_player(self, P_num):
         self.P_num = P_num
@@ -121,6 +157,7 @@ class Player:
                         self.lives -= 1 #Decrease life count by 1
                         self.dying = True
                         flag = True #Returns a true flag for player being hit
+                        self.snd.Explode()
                     if self.lives == 0:
                         self.lose = True
                 
@@ -134,6 +171,7 @@ class Player:
                         self.lives -= 1
                         self.dying = True
                         flag = True
+                        self.snd.Explode()
                     if self.lives == 0:
                         self.lose = True
                         
@@ -147,6 +185,7 @@ class Player:
                 self.init_player(self.P_num) #Respawn player at starting position
                 self.safeRespawnTimeCount = 0 #Resets respawn cooldown time
                 flag = True
+                self.snd.Respawn()
         return flag
 
     def checkCollision(self, WallList): #Checks collision between player and wall
@@ -164,31 +203,46 @@ class Player:
             elif pygame.Rect.colliderect(self.RECT, pygame.Rect(i.x, i.y-7, i.width, i.height)):
                     self.accy = 0
 
+
     def checkTeleportCollision(self, teleList):
+        #print(self.teleporting)
         for i in teleList:
+            i.flash(False, True)
             if pygame.Rect.colliderect(self.RECT, pygame.Rect(i.x, i.y, i.width, i.height)):
-                self.accx = 0
+                #self.accx = 0
                 if(i.T_num == 1):
-                    self.RECT = teleList[1].getRECT()
+                    new_pos = teleList[3].getRECT()
                 elif(i.T_num == 2):
-                    self.RECT = teleList[0].getRECT()
+                    new_pos = teleList[5].getRECT()
                 elif(i.T_num == 3):
-                    self.RECT = teleList[3].getRECT()
+                    new_pos = teleList[4].getRECT()                    
                 elif(i.T_num == 4):
-                    self.RECT = teleList[2].getRECT()
+                    new_pos = teleList[0].getRECT()
                 elif(i.T_num == 5):
-                    self.RECT = teleList[5].getRECT()
+                    new_pos = teleList[2].getRECT()
                 elif(i.T_num == 6):
-                    self.RECT = teleList[4].getRECT()
+                    new_pos = teleList[1].getRECT()
                 elif(i.T_num == 7):
-                    self.RECT = teleList[7].getRECT()
+                    new_pos = teleList[7].getRECT()
                 elif(i.T_num == 8):
-                    self.RECT = teleList[6].getRECT()
+                    new_pos = teleList[6].getRECT()
+                self.RECT.x = new_pos[0]
+                self.RECT.y = new_pos[1]
+                i.flash(True, True)
+            #else:
+                
+
+
                         
+   
     def checkLaserCollision(self, WallList):
         if self.laserShot.checkCollision(WallList):
             return True
         return False
+
+    def checkLaserTPCollision(self, teleList):
+         self.laserInfo = self.laserShot.checkTeleportCollision(teleList)
+         return self.laserInfo
 #--------Movement--------
     def movement(self):
         key = pygame.key.get_pressed()
@@ -201,7 +255,7 @@ class Player:
                 self.acc_left()
             if key[pygame.K_d] and not key[pygame.K_a]: #Move Right
                 self.acc_right()
-            
+                
             if not key[pygame.K_w] or key[pygame.K_s]: #Decelerate Up
                 self.dec_up()
             if not key[pygame.K_s] or key[pygame.K_w]: #Decelerate Down
@@ -210,6 +264,9 @@ class Player:
                 self.dec_left()
             if not key[pygame.K_d] or key[pygame.K_a]: #Decelerate Right
                 self.dec_right()
+            #if not key[pygame.K_a] or not key[pygame.K_d]:
+
+
                     
         elif self.P_num == 2 and self.dying == False and self.lose == False: #Player 2 controls
             if key[pygame.K_UP] and not key[pygame.K_DOWN]: #Move Up
@@ -233,7 +290,7 @@ class Player:
         elif self.dying:
             self.accy = 0
             self.accx = 0
-                
+              
  #-------Acceleration Functions--------
     def acc_up(self):
         if self.accy > self.speed*-1:
@@ -292,6 +349,19 @@ class Player:
             self.accx = 0
         self.RECT.x += self.accx
 
+    #def shift_momentum(self):
+        #self.teleporting = Truea
+        #if self.flip:
+          #  old_accx = self.accx*-1
+          #  self.accx = 0
+          #  self.RECT.x += old_accx
+        #else:
+           # old_accx = self.accx
+          #  self.accx = 0
+          #  self.RECT.x += old_accx
+
+        #self.accx = old_accx
+        
 #-------------------------------------
         
     def screen_wrap(self): #Screen Wrapping
@@ -319,7 +389,7 @@ class Player:
     def send_screen(self, screen_size):
         self.screen_size = screen_size
 
-    def shoot_laser(self): #Checks to see if either player shot a laser and activates the appropriate creation and movement functions of the laser
+    def shoot_laser(self, tp_list): #Checks to see if either player shot a laser and activates the appropriate creation and movement functions of the laser
                             #Returns information about the laser
         key = pygame.key.get_pressed()
         if self.laserCoolDownCount < self.laserCoolDown:
@@ -344,13 +414,18 @@ class Player:
                     #print("Lasers current life is less than the max and laser is active")
                     self.laserInfo[1] = self.laserShot.laser_movement(self.laserInfo[1])#Move the laser
                     self.laserInfo[1] = self.laserShot.screen_wrap(self.screen_size, self.laserInfo[1])
+                    #print(tp_list)
+                    if tp_list[0] != 0:
+                        self.laserInfo = self.laserShot.checkTeleportCollision(tp_list)
                     self.laserCurLife += 1 #Increase life count by 1
 
                 else: #If the laser has reached it's end of life
                     #print("Lasers current life reached the max and laser is active")
                     self.laserCurLife = 0 #Reset the lasers current life to 0
                     self.laserInfo = [0]*5 #Clear any information about the laser
+                    self.laserShot.Laser_RECT = pygame.Rect(0,0,0,0)
                     self.laserActive = False #Sets the laser to inactive
+                    #print("Laser EOL")
                     self.laserCoolDownCount = 0 #Activates cool down
                     
                     
@@ -362,6 +437,7 @@ class Player:
         self.laserActive = False #Sets the laser to inactive
         self.laserCoolDownCount = 0 #Activates cool down
         self.laserShot.Laser_RECT = pygame.Rect(0,0,0,0)
+        #print("Laser destroy")
         return self.laserInfo
     
     
