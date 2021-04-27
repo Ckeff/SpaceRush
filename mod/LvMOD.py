@@ -214,7 +214,7 @@ class Level:
                     smast_list[j+1] = smast[j+1].get_ast()
                 j += 2
            
-            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, winner) #Updates each object's position on the screen
+            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, winner, TeleporterList) #Updates each object's position on the screen
             
             if winner[0] or winner[1]:
                 option = self.restart_quit()
@@ -248,6 +248,17 @@ class Level:
         #left and right
         WallList[4] = mod.LvObjMOD.Wall(0, 0, 50, 650, True, screen)
         WallList[5] = mod.LvObjMOD.Wall(1104, 0, 50, 650, True, screen)
+
+        TeleporterList = [0] * 8
+        TeleporterList[0] = mod.LvObjMOD.Teleporter(1, 1, (50, 150))
+        TeleporterList[1] = mod.LvObjMOD.Teleporter(1, 2, (610, 450))
+        TeleporterList[2] = mod.LvObjMOD.Teleporter(1, 3, (610, 150))
+        TeleporterList[3] = mod.LvObjMOD.Teleporter(1, 4, (1030, 450))
+        TeleporterList[4] = mod.LvObjMOD.Teleporter(1, 5, (475, 450))
+        TeleporterList[5] = mod.LvObjMOD.Teleporter(1, 6, (1030, 150))
+        TeleporterList[6] = mod.LvObjMOD.Teleporter(1, 7, (475, 150))
+        TeleporterList[7] = mod.LvObjMOD.Teleporter(1, 8, (50, 450))
+
 
         clock = pygame.time.Clock() #Used for managing how fast the screen updates
         done = False #Flag for closing the game (if user presses X)
@@ -289,7 +300,9 @@ class Level:
 
             Player_1.checkCollision(WallList)
             Player_2.checkCollision(WallList)
-
+            Player_1.checkTeleportCollision(TeleporterList)
+            Player_2.checkTeleportCollision(TeleporterList)
+            
             if Player_1.checkLaserCollision(WallList):
                 P1_Laser = Player_1.destroy_laser()
                 
@@ -302,7 +315,7 @@ class Level:
             P1_list = Player_1.get_player() #Retrieves player sprite and rectangle positions and puts them in a list
             P2_list = Player_2.get_player()
            
-            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, winner) #Updates each players position on the screen
+            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, winner, TeleporterList) #Updates each players position on the screen
             
             if winner[0] or winner[1]:
                 option = self.restart_quit()
@@ -380,7 +393,7 @@ class Level:
             P1_list = Player_1.get_player() #Retrieves player sprite and rectangle positions and puts them in a list
             P2_list = Player_2.get_player()
            
-            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, winner) #Updates each players position on the screen
+            screen.update(P1_list, P2_list, P1_Laser, P2_Laser, WallList, ast_list, smast_list, beam_info, winner, TeleporterList) #Updates each players position on the screen
 
             if winner[0] or winner[1]:
                 option = self.restart_quit()

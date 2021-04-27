@@ -163,6 +163,27 @@ class Player:
                     self.RECT.y+=2
             elif pygame.Rect.colliderect(self.RECT, pygame.Rect(i.x, i.y-7, i.width, i.height)):
                     self.accy = 0
+
+    def checkTeleportCollision(self, teleList):
+        for i in teleList:
+            if pygame.Rect.colliderect(self.RECT, pygame.Rect(i.x, i.y, i.width, i.height)):
+                self.accx = 0
+                if(i.T_num == 1):
+                    self.RECT = teleList[1].getRECT()
+                elif(i.T_num == 2):
+                    self.RECT = teleList[0].getRECT()
+                elif(i.T_num == 3):
+                    self.RECT = teleList[3].getRECT()
+                elif(i.T_num == 4):
+                    self.RECT = teleList[2].getRECT()
+                elif(i.T_num == 5):
+                    self.RECT = teleList[5].getRECT()
+                elif(i.T_num == 6):
+                    self.RECT = teleList[4].getRECT()
+                elif(i.T_num == 7):
+                    self.RECT = teleList[7].getRECT()
+                elif(i.T_num == 8):
+                    self.RECT = teleList[6].getRECT()
                         
     def checkLaserCollision(self, WallList):
         if self.laserShot.checkCollision(WallList):

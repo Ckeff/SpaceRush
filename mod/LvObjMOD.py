@@ -27,6 +27,31 @@ class Wall:
         #self.image.fill(color)
         self.rect = self.image.get_rect()
 
+class Teleporter:
+    def __init__(self, color, T_num, T_pos): #Constructor
+        super().__init__()
+        pygame.sprite.Sprite.__init__(self)
+        self.T_num = T_num
+        self.T_pos = T_pos
+        self.RECT = pygame.Rect(T_pos[0], T_pos[1], 64, 64) #Player Hitbox (X, Y, Width, Height)
+        self.x = T_pos[0]
+        self.y = T_pos[1]
+        self.width = 64
+        self.height = 64
+
+        if color == 1:
+            sprite_name = 'P1.png'
+
+        self.image = pygame.image.load(os.path.join('spr',sprite_name)).convert_alpha()
+
+    def getRECT(self):
+        if self.T_num == 4 or self.T_num == 7 or self.T_num == 6 or self.T_num == 5:
+            self.RECT = pygame.Rect(self.T_pos[0]-80, self.T_pos[1], 64, 64)
+            return self.RECT
+        else:
+            self.RECT = pygame.Rect(self.T_pos[0]+80, self.T_pos[1], 64, 64)
+            return self.RECT
+
 
 class Asteroid:
     def __init__(self, screen_size, P1_list, P2_list): #Constructor, takes screen size and info about P1 and P2 to spawn asteroids
