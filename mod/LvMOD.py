@@ -32,6 +32,7 @@ class Level:
         Player_2.init_player(2) #Inits player 2 specific data
 
         WallList = [0] * WALL_AMOUNT #creates list for all walls based on wall amount constant
+        TeleporterList = [0]
 
         clock = pygame.time.Clock() #Used for managing how fast the screen updates
         done = False #Flag for closing the game (if user presses X)
@@ -340,7 +341,8 @@ class Level:
         Player_2.init_player(2) #Inits player 2 specific data
 
         WallList = [0] * WALL_AMOUNT #creates list for all walls based on wall amount constant
-
+        TeleporterList = [0]
+        
         clock = pygame.time.Clock() #Used for managing how fast the screen updates
         done = False #Flag for closing the game (if user presses X)
         Player_1.send_screen(screen.get_size())
